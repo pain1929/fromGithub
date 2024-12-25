@@ -87,11 +87,8 @@ type GitHubFile struct {
 
 //export GetTextFromGithub
 func GetTextFromGithub(uname string, rep string, path string) string {
-	// GitHub API 请求 URL
-	owner := "pain1929"
-	repo := "deepRockHack1929"
-	filePath := "README.md"
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", owner, repo, filePath)
+
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", uname, rep, path)
 
 	// 发送 GET 请求
 	resp, err := http.Get(url)
