@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 )
@@ -28,11 +27,13 @@ func FromGithub(uname string, rep string, currentVer string, saveTo string) bool
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", uname, rep)
 	res, err := http.Get(url)
 	if err != nil {
+		println(err.Error())
 		return false
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
+		println(res.Status)
 		return false
 	}
 
@@ -58,11 +59,13 @@ func FromGithub(uname string, rep string, currentVer string, saveTo string) bool
 
 	resp, err := http.Get(release.Assets[0].BrowserDownloadURL)
 	if err != nil {
+		println(err.Error())
 		return false
 	}
 
 	create, err := os.Create(saveTo)
 	if err != nil {
+		println(err.Error())
 		return false
 	}
 	defer create.Close()
@@ -70,6 +73,7 @@ func FromGithub(uname string, rep string, currentVer string, saveTo string) bool
 	_, err = io.Copy(create, resp.Body)
 
 	if err != nil {
+		println(err.Error())
 		return false
 	}
 
@@ -92,26 +96,30 @@ func GetTextFromGithub(uname string, rep string, path string) string {
 	// 发送 GET 请求
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Fatal(err)
+		println(err.Error())
+		return ""
 	}
 	defer resp.Body.Close()
 
 	// 读取响应体
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		println(err.Error())
+		return ""
 	}
 
 	// 检查 HTTP 状态码
 	if resp.StatusCode != http.StatusOK {
-		log.Fatalf("Error: %s\n", body)
+		println("statusCode error")
+		return ""
 	}
 
 	// 解析 JSON 响应
 	var file GitHubFile
 	err = json.Unmarshal(body, &file)
 	if err != nil {
-		log.Fatal(err)
+		println(err.Error())
+		return ""
 	}
 
 	// 获取 README.md 文件内容
@@ -119,14 +127,16 @@ func GetTextFromGithub(uname string, rep string, path string) string {
 		// 发送请求以获取文件内容
 		resp, err := http.Get(file.DownloadURL)
 		if err != nil {
-			log.Fatal(err)
+			println(err.Error())
+			return ""
 		}
 		defer resp.Body.Close()
 
 		// 读取文件内容
 		content, err := io.ReadAll(resp.Body)
 		if err != nil {
-			log.Fatal(err)
+			println(err.Error())
+			return ""
 		}
 		return string(content)
 	}
