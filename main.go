@@ -30,7 +30,12 @@ func FromGithub(uname string, rep string, currentVer string, saveTo string) bool
 		println(err.Error())
 		return false
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			println(err.Error())
+		}
+	}(res.Body)
 
 	if res.StatusCode != 200 {
 		println(res.Status)
@@ -68,7 +73,12 @@ func FromGithub(uname string, rep string, currentVer string, saveTo string) bool
 		println(err.Error())
 		return false
 	}
-	defer create.Close()
+	defer func(create *os.File) {
+		err := create.Close()
+		if err != nil {
+			println(err.Error())
+		}
+	}(create)
 
 	_, err = io.Copy(create, resp.Body)
 
@@ -89,15 +99,14 @@ type GitHubFile struct {
 }
 
 //export GetTextFromGithub
-func GetTextFromGithub(uname string, rep string, path string) string {
-
+func GetTextFromGithub(uname string, rep string, path string) *C.char {
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s", uname, rep, path)
 
 	// 发送 GET 请求
 	resp, err := http.Get(url)
 	if err != nil {
 		println(err.Error())
-		return ""
+		return nil
 	}
 	defer resp.Body.Close()
 
@@ -105,13 +114,13 @@ func GetTextFromGithub(uname string, rep string, path string) string {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		println(err.Error())
-		return ""
+		return nil
 	}
 
 	// 检查 HTTP 状态码
 	if resp.StatusCode != http.StatusOK {
 		println("statusCode error")
-		return ""
+		return nil
 	}
 
 	// 解析 JSON 响应
@@ -119,7 +128,7 @@ func GetTextFromGithub(uname string, rep string, path string) string {
 	err = json.Unmarshal(body, &file)
 	if err != nil {
 		println(err.Error())
-		return ""
+		return nil
 	}
 
 	// 获取 README.md 文件内容
@@ -128,7 +137,7 @@ func GetTextFromGithub(uname string, rep string, path string) string {
 		resp, err := http.Get(file.DownloadURL)
 		if err != nil {
 			println(err.Error())
-			return ""
+			return nil
 		}
 		defer resp.Body.Close()
 
@@ -136,18 +145,18 @@ func GetTextFromGithub(uname string, rep string, path string) string {
 		content, err := io.ReadAll(resp.Body)
 		if err != nil {
 			println(err.Error())
-			return ""
+			return nil
 		}
-		return string(content)
+		// 将 Go 字符串转换为 C 字符串
+		return C.CString(string(content))
 	}
 
-	return ""
-
+	return nil
 }
 
 func main() {
 	//FromGithub("pain1929", "deepRockHack1929", "1.0.1", "data.zip")
-	//github := GetTextFromGithub("pain1929", "deepRockHack1929", "README.md")
+	github := GetTextFromGithub("pain1929", "deepRockHack1929", "README.md")
 
-	//println(github)
+	println(github)
 }

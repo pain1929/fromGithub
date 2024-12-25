@@ -75,7 +75,7 @@ extern "C" {
 #endif
 
 extern __declspec(dllexport) GoUint8 FromGithub(GoString uname, GoString rep, GoString currentVer, GoString saveTo);
-extern __declspec(dllexport) GoString GetTextFromGithub(GoString uname, GoString rep, GoString path);
+extern __declspec(dllexport) char* GetTextFromGithub(GoString uname, GoString rep, GoString path);
 
 #ifdef __cplusplus
 }
